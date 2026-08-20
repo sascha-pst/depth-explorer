@@ -1,0 +1,15 @@
+{"count": 2, "returned": 2, "data": [
+ {"SpecCode": 143, "StockCode": 157, "Level": "Regional stock",
+  "StockDefs": "Western Atlantic stock, Gulf of Mexico spawning component.",
+  "IUCN_Code": null, "Northernmost": 40, "NorthSouthN": "N"},
+ {"SpecCode": 143, "StockCode": 156, "Level": "Species level",
+  "StockDefs": "Atlantic Ocean and adjacent seas, including the Mediterranean and the Black Sea.",
+  "StockDefsGeneral": "Widely distributed across the temperate North Atlantic.",
+  "IUCN_Code": "LC", "IUCN_Assessment": "Least Concern (LC)", "IUCN_DateAssessed": "2021-01-01",
+  "Protected": 0,
+  "Northernmost": 70, "NorthSouthN": "N", "Southermost": 40, "SouthNorthS": "S",
+  "TempMin": 3.0, "TempMax": 30.0, "EnvTemp": "subtropical",
+  "Resilience": "Very low, minimum population doubling time more than 14 years",
+  "ResilienceRemark": "Assuming a low fecundity-at-age and late maturity (Ref. 32988).",
+  "Comments": "Heavily targeted by longline and purse seine fisheries."}
+]}
