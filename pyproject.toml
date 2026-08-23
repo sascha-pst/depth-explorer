@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "depth-explorer"
+version = "0.1.0"
+description = "Ingestion and chunking pipeline for oceanic species data (RAG corpus builder)"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+depth-explorer = "depth_explorer.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["depth_explorer*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

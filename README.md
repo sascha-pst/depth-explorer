@@ -1,11 +1,61 @@
-# Pelagic Species & Climate Change Dataset
+# Depth Explorer
 
-A curated dataset of pelagic (open-ocean) species with taxonomy, geographic range, diet, trophic role, and documented responses to climate change — plus a pipeline design for expanding it programmatically.
+Ingestion and chunking pipeline for oceanic species data — the corpus builder
+behind a retrieval-augmented generation engine over marine biodiversity.
+
+It collects **structured records** (taxonomy, habitat, depth ranges,
+conservation status) and **unstructured text** (species descriptions, field
+notes, literature remarks) from open biodiversity APIs, normalizes both into one
+schema, and emits retrievable chunks with provenance.
+
+## Status
+
+| Source | Provides | State |
+|---|---|---|
+| **FishBase** | Biology, ecology, depth, IUCN status, prose | **Implemented** — see [docs/fishbase.md](docs/fishbase.md) |
+| **SeaLifeBase** | Same, for non-fish marine life | Implemented — `--server sealifebase` |
+| **WoRMS** | Authoritative taxonomy, AphiaID | Planned |
+| **OBIS** / **GBIF** | Occurrence records | Planned |
+| **IUCN Red List** | Structured threat assessments | Planned |
 
 ## Contents
 
-- `pelagic_species_climate.csv` — 30 species spanning bony fish, sharks and rays, marine mammals, sea turtles, cephalopods, crustaceans, cnidarians, and seabirds.
-- (Planned) `collect_species.py` — script to fetch and append new species from open biodiversity APIs.
+- `depth_explorer/` — the pipeline (`core/` is source-agnostic, `sources/` holds connectors).
+- `tests/` — 257 tests, run entirely offline against recorded fixtures.
+- `pelagic_species_climate.csv` — 30 curated species, usable as an ingest seed list.
+
+## Quick start
+
+```bash
+python -m depth_explorer.cli ingest "Thunnus thynnus" --dry-run
+python -m depth_explorer.cli ingest --from-csv pelagic_species_climate.csv
+python -m pytest
+```
+
+Before the first real run, check the live API against the columns the
+normalizer reads:
+
+```bash
+python -m depth_explorer.cli verify-schema
+```
+
+## How it works
+
+```
+fetch  ──►  normalize  ──►  chunk  ──►  data/chunks.jsonl
+(cached     (canonical      (shared
+ raw JSON)   SpeciesRecord)  renderer)
+```
+
+Only `fetch` and `normalize` are source-specific. Everything downstream — the
+chunker, the retrieval facets, provenance, and idempotent writes — is shared, so
+each new source is one `SourceConnector` subclass and nothing else.
+
+Chunks are self-contained (each names its species), structured facts are
+rendered as prose rather than dumped as JSON, and every chunk carries the API
+url, tables, columns, fetch time and literature references behind it.
+[docs/fishbase.md](docs/fishbase.md) covers the chunk layout, facets and the
+FishBase-specific quirks the connector handles.
 
 ## Dataset Schema
 
@@ -34,60 +84,32 @@ The dataset is structured for exploratory analysis:
 - `regions` is a delimited text field; split it into one row per species–region pair for region-level `groupby` operations.
 - Possible extensions: IUCN conservation status, numeric trophic level (from FishBase), max body length, response-type category (range shift / phenology / compression / winner).
 
-## Expanding the Dataset: Collection Pipeline
+## Collection pipeline design
 
-Rather than scraping, use the free biodiversity APIs. The pipeline follows a **fetch → normalize → merge** pattern.
+The original fetch → normalize → merge design is now implemented in
+`depth_explorer/`. The principles it was built on still hold:
+
+1. **Seed from known pelagic families** rather than filtering "pelagic" out of
+   all marine life.
+2. **Join on stable ids, not names.** Records carry an `identifiers` map
+   (`{"fishbase_speccode": "143"}`) so a WoRMS AphiaID can become the
+   cross-source join key once WoRMS is connected.
+3. **Rate-limit and cache.** One request per second; raw JSON is written to
+   `data/raw/` before parsing, so a parser failure never forces a re-download.
+4. **Make it idempotent.** Ids derive from position, not content, and writes are
+   upserts — re-ingesting unchanged data leaves the corpus byte-identical.
+5. **Keep the climate column curated.** Taxonomy, ranges and diet come cleanly
+   from APIs; documented climate responses live in the literature.
 
 ### Data sources
 
 | Source | What it provides | Endpoint |
 |---|---|---|
-| **WoRMS** (World Register of Marine Species) | Authoritative taxonomy: verified genus, species, family, and a stable AphiaID | `https://www.marinespecies.org/rest/` |
-| **GBIF** | Occurrence records with coordinates — derive regions from actual observations | `https://api.gbif.org/v1/` |
-| **FishBase / SeaLifeBase** | Diet, trophic level, habitat zone | via the `rfishbase` R package or API mirrors |
-| **IUCN Red List** (optional) | Structured threat assessments as a climate-response proxy | `https://apiv3.iucnredlist.org` (free API key required) |
-
-### Design principles
-
-1. **Seed from known pelagic families.** Query WoRMS for members of families like Scombridae, Clupeidae, or Myctophidae rather than filtering "pelagic" out of all marine life.
-2. **Join on AphiaID, not names.** Species names have synonyms and spelling variants (*Physeter macrocephalus* vs. *P. catodon*); the AphiaID is the stable primary key across sources.
-3. **Rate-limit and cache.** Sleep ~1 s between calls and save raw JSON responses to disk before parsing, so a parser failure never forces a re-download.
-4. **Make it idempotent.** Load the existing CSV, check which AphiaIDs are already present, and fetch only new species — the script grows the dataset instead of rebuilding it.
-5. **Keep the climate column curated.** Taxonomy, regions, and diet come cleanly from APIs, but climate responses live in the literature. Either pull IUCN assessments as a structured proxy or maintain that column manually.
-
-### Skeleton code
-
-```python
-import requests, time
-import pandas as pd
-
-def get_worms_record(name):
-    url = f"https://www.marinespecies.org/rest/AphiaRecordsByName/{name}"
-    r = requests.get(url, params={"like": "false", "marine_only": "true"})
-    r.raise_for_status()
-    rec = r.json()[0]  # first = best match
-    return {"scientific_name": rec["scientificname"],
-            "genus": rec["genus"], "family": rec["family"],
-            "aphia_id": rec["AphiaID"]}
-
-def get_gbif_regions(scientific_name, n=300):
-    r = requests.get("https://api.gbif.org/v1/occurrence/search",
-                     params={"scientificName": scientific_name,
-                             "hasCoordinate": "true", "limit": n})
-    recs = r.json()["results"]
-    # derive ocean basins from lat/lon here
-    return [(x["decimalLatitude"], x["decimalLongitude"]) for x in recs]
-
-species_list = ["Thunnus obesus", "Scomber japonicus", "Euphausia pacifica"]
-rows = []
-for sp in species_list:
-    rows.append({**get_worms_record(sp)})
-    time.sleep(1)  # be polite to the API
-
-pd.DataFrame(rows).to_csv("new_species.csv", index=False)
-```
-
-> **Caveat:** the snippet is a verified-syntax starting point, not a guaranteed-running script. API response field names should be confirmed against one raw JSON response before building out the full pipeline.
+| **FishBase / SeaLifeBase** | Biology, ecology, depth, IUCN status, prose | `https://fishbase.ropensci.org/` |
+| **WoRMS** | Verified taxonomy and a stable AphiaID | `https://www.marinespecies.org/rest/` |
+| **OBIS** | Marine occurrence records | `https://api.obis.org/v3/` |
+| **GBIF** | Occurrence records with coordinates | `https://api.gbif.org/v1/` |
+| **IUCN Red List** | Structured threat assessments | `https://apiv3.iucnredlist.org` (API key required) |
 
 ## Sources & Caveats
 

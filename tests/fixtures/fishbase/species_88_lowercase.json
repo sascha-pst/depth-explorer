@@ -1,0 +1,11 @@
+{"count": 1, "returned": 1, "data": [{
+  "speccode": 88,
+  "genus": "Anguilla",
+  "species": "anguilla",
+  "fbname": "European eel",
+  "saltwater": -1, "brack": -1, "fresh": -1,
+  "demerspelag": "demersal",
+  "depthrangeshallow": 0, "depthrangedeep": 700,
+  "vulnerability": 66.5,
+  "comments": "Catadromous. Adults migrate to the Sargasso Sea to spawn."
+}]}

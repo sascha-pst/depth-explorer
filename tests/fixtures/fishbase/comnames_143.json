@@ -1,0 +1,34 @@
+{
+ "count": 4,
+ "returned": 4,
+ "data": [
+  {
+   "SpecCode": 143,
+   "ComName": "Atlantic bluefin tuna",
+   "Language": "English",
+   "PreferredName": -1,
+   "NameType": "vernacular"
+  },
+  {
+   "SpecCode": 143,
+   "ComName": "Northern bluefin tuna",
+   "Language": "English",
+   "PreferredName": 0,
+   "NameType": "vernacular"
+  },
+  {
+   "SpecCode": 143,
+   "ComName": "Giant bluefin tuna",
+   "Language": "English",
+   "PreferredName": 0,
+   "NameType": "vernacular"
+  },
+  {
+   "SpecCode": 143,
+   "ComName": "Thon rouge",
+   "Language": "French",
+   "PreferredName": 0,
+   "NameType": "vernacular"
+  }
+ ]
+}

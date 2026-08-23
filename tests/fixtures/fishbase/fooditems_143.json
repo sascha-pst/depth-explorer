@@ -1,0 +1,5 @@
+{"count": 3, "returned": 3, "data": [
+ {"SpecCode": 143, "StockCode": 156, "Foodgroup": "nekton", "Foodname": "bony fish"},
+ {"SpecCode": 143, "StockCode": 156, "Foodgroup": "nekton", "Foodname": "cephalopods"},
+ {"SpecCode": 143, "StockCode": 156, "Foodgroup": "zoobenthos", "Foodname": "crustaceans"}
+]}

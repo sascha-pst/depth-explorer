@@ -1,0 +1,44 @@
+{
+ "count": 2,
+ "returned": 2,
+ "data": [
+  {
+   "SpecCode": 143,
+   "StockCode": 156,
+   "Neritic": -1,
+   "Oceanic": -1,
+   "Epipelagic": -1,
+   "Mesopelagic": -1,
+   "Bathypelagic": 0,
+   "Abyssopelagic": 0,
+   "Hadopelagic": 0,
+   "Estuaries": 0,
+   "Mangroves": 0,
+   "Coralreefs": 0,
+   "Intertidal": 0,
+   "SubLittoral": 0,
+   "FeedingType": "hunting macrofauna (predator)",
+   "DietTroph": 4.43,
+   "DietSeTroph": 0.75,
+   "FoodTroph": 4.4,
+   "FoodSeTroph": 0.71,
+   "DietRemark": "Diet dominated by clupeoid fishes in the eastern Atlantic (Ref. 4931).",
+   "AddRems": "Endothermic; retains metabolic heat in red muscle.",
+   "Caves": 0,
+   "FoodRemark": "Prey size increases with body length (Ref. 4931)."
+  },
+  {
+   "SpecCode": 143,
+   "StockCode": 157,
+   "Neritic": 0,
+   "Oceanic": -1,
+   "Epipelagic": -1,
+   "Mesopelagic": 0,
+   "Bathypelagic": -1,
+   "FeedingType": "hunting macrofauna (predator)",
+   "DietRemark": "Diet dominated by clupeoid fishes in the eastern Atlantic (Ref. 4931).",
+   "Caves": 0,
+   "FoodRemark": null
+  }
+ ]
+}
